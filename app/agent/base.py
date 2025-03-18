@@ -14,13 +14,18 @@ class BaseAgent(BaseModel, ABC):
 
     Provides foundational functionality for state transitions, memory management,
     and a step-based execution loop. Subclasses must implement the `step` method.
+
+    代理状态和执行管理的抽象基类。
+
+    提供状态转换、内存管理和基于步骤的执行循环的基础功能。
+    子类必须实现`step`方法。
     """
 
-    # Core attributes
+    # Core attributes 核心属性
     name: str = Field(..., description="Unique name of the agent")
     description: Optional[str] = Field(None, description="Optional agent description")
 
-    # Prompts
+    # Prompts 提示词
     system_prompt: Optional[str] = Field(
         None, description="System-level instruction prompt"
     )
@@ -28,14 +33,14 @@ class BaseAgent(BaseModel, ABC):
         None, description="Prompt for determining next action"
     )
 
-    # Dependencies
+    # Dependencies 依赖项
     llm: LLM = Field(default_factory=LLM, description="Language model instance")
     memory: Memory = Field(default_factory=Memory, description="Agent's memory store")
     state: AgentState = Field(
         default=AgentState.IDLE, description="Current agent state"
     )
 
-    # Execution control
+    # Execution control 执行控制
     max_steps: int = Field(default=10, description="Maximum steps before termination")
     current_step: int = Field(default=0, description="Current step in execution")
 
@@ -47,7 +52,10 @@ class BaseAgent(BaseModel, ABC):
 
     @model_validator(mode="after")
     def initialize_agent(self) -> "BaseAgent":
-        """Initialize agent with default settings if not provided."""
+        """Initialize agent with default settings if not provided.
+        
+        如果未提供默认设置，则初始化代理。
+        """
         if self.llm is None or not isinstance(self.llm, LLM):
             self.llm = LLM(config_name=self.name.lower())
         if not isinstance(self.memory, Memory):
@@ -66,6 +74,17 @@ class BaseAgent(BaseModel, ABC):
 
         Raises:
             ValueError: If the new_state is invalid.
+
+        代理状态安全转换的上下文管理器。
+
+        参数：
+            new_state: 在上下文期间要转换到的状态。
+
+        生成：
+            None: 允许在新状态下执行。
+
+        异常：
+            ValueError: 如果new_state无效。
         """
         if not isinstance(new_state, AgentState):
             raise ValueError(f"Invalid state: {new_state}")
@@ -97,6 +116,17 @@ class BaseAgent(BaseModel, ABC):
 
         Raises:
             ValueError: If the role is unsupported.
+
+        向代理的内存中添加消息。
+
+        参数：
+            role: 消息发送者的角色（用户、系统、助手、工具）。
+            content: 消息内容。
+            base64_image: 可选的base64编码图像。
+            **kwargs: 额外参数（例如，工具消息的tool_call_id）。
+
+        异常：
+            ValueError: 如果角色不受支持。
         """
         message_map = {
             "user": Message.user_message,
@@ -123,6 +153,17 @@ class BaseAgent(BaseModel, ABC):
 
         Raises:
             RuntimeError: If the agent is not in IDLE state at start.
+
+        异步执行代理的主循环。
+
+        参数：
+            request: 可选的初始用户请求。
+
+        返回：
+            总结执行结果的字符串。
+
+        异常：
+            RuntimeError: 如果代理在开始时不处于IDLE状态。
         """
         if self.state != AgentState.IDLE:
             raise RuntimeError(f"Cannot run agent from state: {self.state}")
@@ -157,17 +198,27 @@ class BaseAgent(BaseModel, ABC):
         """Execute a single step in the agent's workflow.
 
         Must be implemented by subclasses to define specific behavior.
+
+        执行代理工作流中的单个步骤。
+
+        必须由子类实现以定义具体行为。
         """
 
     def handle_stuck_state(self):
-        """Handle stuck state by adding a prompt to change strategy"""
+        """Handle stuck state by adding a prompt to change strategy
+
+        通过添加提示来改变策略，处理卡住的状态
+        """
         stuck_prompt = "\
         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted."
         self.next_step_prompt = f"{stuck_prompt}\n{self.next_step_prompt}"
         logger.warning(f"Agent detected stuck state. Added prompt: {stuck_prompt}")
 
     def is_stuck(self) -> bool:
-        """Check if the agent is stuck in a loop by detecting duplicate content"""
+        """Check if the agent is stuck in a loop by detecting duplicate content
+
+        通过检测重复内容来检查代理是否陷入循环
+        """
         if len(self.memory.messages) < 2:
             return False
 
@@ -186,10 +237,16 @@ class BaseAgent(BaseModel, ABC):
 
     @property
     def messages(self) -> List[Message]:
-        """Retrieve a list of messages from the agent's memory."""
+        """Retrieve a list of messages from the agent's memory.
+
+        从代理的内存中获取消息列表。
+        """
         return self.memory.messages
 
     @messages.setter
     def messages(self, value: List[Message]):
-        """Set the list of messages in the agent's memory."""
+        """Set the list of messages in the agent's memory.
+
+        设置代理内存中的消息列表。
+        """
         self.memory.messages = value
