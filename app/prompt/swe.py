@@ -1,4 +1,3 @@
-# 系统提示词：定义自主程序员的角色和工作环境
 SYSTEM_PROMPT = """SETTING: You are an autonomous programmer, and you're working directly in the command line with a special interface.
 
 The special interface consists of a file editor that shows you {{WINDOW}} lines of a file at a time.
@@ -22,7 +21,6 @@ If you'd like to issue two commands at once, PLEASE DO NOT DO THAT! Please inste
 Note that the environment does NOT support interactive session commands (e.g. python, vim), so please do not invoke them.
 """
 
-# 下一步提示词模板：定义shell提示符的格式和显示信息
 NEXT_STEP_TEMPLATE = """{{observation}}
 (Open file: {{open_file}})
 (Current directory: {{working_dir}})

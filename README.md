@@ -1,18 +1,19 @@
-English | [中文](README_zh.md)
+<p align="center">
+  <img src="assets/logo.jpg" width="200"/>
+</p>
 
-[![GitHub stars](https://img.shields.io/github/stars/mannaandpoem/OpenManus?style=social)](https://github.com/gregpr07/browser-use/stargazers) &ensp;
-[![Twitter Follow](https://img.shields.io/twitter/follow/openmanus?style=social)](https://twitter.com/openmanus) &ensp;
-[![Discord Follow](https://dcbadge.vercel.app/api/server/https://discord.gg/6dn7Sa3a?style=flat)](https://discord.gg/6dn7Sa3a) &ensp;
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+English | [中文](README_zh.md) | [한국어](README_ko.md) | [日本語](README_ja.md)
+
+[![GitHub stars](https://img.shields.io/github/stars/mannaandpoem/OpenManus?style=social)](https://github.com/mannaandpoem/OpenManus/stargazers)
+&ensp;
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) &ensp;
+[![Discord Follow](https://dcbadge.vercel.app/api/server/DYn29wFk9z?style=flat)](https://discord.gg/DYn29wFk9z)
 
 # 👋 OpenManus
 
 Manus is incredible, but OpenManus can achieve any idea without an *Invite Code* 🛫!
 
-Our team
-members [@mannaandpoem](https://github.com/mannaandpoem) [@XiangJinyu](https://github.com/XiangJinyu) [@MoshiQAQ](https://github.com/MoshiQAQ) [@didiforgithub](https://github.com/didiforgithub) [@stellaHSR](https://github.com/stellaHSR)
-and [@Xinyu Zhang](https://x.com/xinyzng), we are from [@MetaGPT](https://github.com/geekan/MetaGPT) etc. The prototype
-is launched within 3 hours and we are keeping building!
+Our team members [@Xinbin Liang](https://github.com/mannaandpoem) and [@Jinyu Xiang](https://github.com/XiangJinyu) (core authors), along with [@Zhaoyang Yu](https://github.com/MoshiQAQ), [@Jiayi Zhang](https://github.com/didiforgithub), and [@Sirui Hong](https://github.com/stellaHSR), we are from [@MetaGPT](https://github.com/geekan/MetaGPT). The prototype is launched within 3 hours and we are keeping building!
 
 It's a simple implementation, so we welcome any suggestions, contributions, and feedback!
 
@@ -68,7 +69,7 @@ cd OpenManus
 3. Create a new virtual environment and activate it:
 
 ```bash
-uv venv
+uv venv --python 3.12
 source .venv/bin/activate  # On Unix/macOS
 # Or on Windows:
 # .venv\Scripts\activate
@@ -130,22 +131,9 @@ We welcome any friendly suggestions and helpful contributions! Just create issue
 
 Or contact @mannaandpoem via 📧email: mannaandpoem@gmail.com
 
-## Roadmap
-
-After comprehensively gathering feedback from community members, we have decided to adopt a 3-4 day iteration cycle to gradually implement the highly anticipated features.
-
-- [ ] Enhance Planning capabilities, optimize task breakdown and execution logic
-- [ ] Introduce standardized evaluation metrics (based on GAIA and TAU-Bench) for continuous performance assessment and optimization
-- [ ] Expand model adaptation and optimize low-cost application scenarios
-- [ ] Implement containerized deployment to simplify installation and usage workflows
-- [ ] Enrich example libraries with more practical cases, including analysis of both successful and failed examples
-- [ ] Frontend/backend development to improve user experience
+**Note**: Before submitting a pull request, please use the pre-commit tool to check your changes. Run `pre-commit run --all-files` to execute the checks.
 
 ## Community Group
-Join our discord group
-
-[![Discord Follow](https://dcbadge.vercel.app/api/server/https://discord.gg/jkT5udP9bw?style=flat)](https://discord.gg/jkT5udP9bw) &ensp;
-
 Join our networking group on Feishu and share your experience with other developers!
 
 <div align="center" style="display: flex; gap: 20px;">
@@ -161,4 +149,18 @@ Join our networking group on Feishu and share your experience with other develop
 Thanks to [anthropic-computer-use](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo)
 and [browser-use](https://github.com/browser-use/browser-use) for providing basic support for this project!
 
+Additionally, we are grateful to [AAAJ](https://github.com/metauto-ai/agent-as-a-judge), [MetaGPT](https://github.com/geekan/MetaGPT), [OpenHands](https://github.com/All-Hands-AI/OpenHands) and [SWE-agent](https://github.com/SWE-agent/SWE-agent).
+
 OpenManus is built by contributors from MetaGPT. Huge thanks to this agent community!
+
+## Cite
+```bibtex
+@misc{openmanus2025,
+  author = {Xinbin Liang and Jinyu Xiang and Zhaoyang Yu and Jiayi Zhang and Sirui Hong},
+  title = {OpenManus: An open-source framework for building general AI agents},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/mannaandpoem/OpenManus}},
+}
+```

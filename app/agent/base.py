@@ -1,65 +1,53 @@
-# 代理基类模块：定义代理的基本接口和状态管理
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
 from app.llm import LLM
 from app.logger import logger
-from app.schema import AgentState, Memory, Message
+from app.schema import ROLE_TYPE, AgentState, Memory, Message
 
 
 class BaseAgent(BaseModel, ABC):
-    """
-    代理基类：管理代理状态和执行流程的抽象基类
-    
-    提供状态转换、内存管理和基于步骤的执行循环的基础功能
-    子类必须实现step方法来定义具体行为
-    
-    Abstract base class for managing agent state and execution.
+    """Abstract base class for managing agent state and execution.
 
     Provides foundational functionality for state transitions, memory management,
     and a step-based execution loop. Subclasses must implement the `step` method.
     """
 
-    # 核心属性
-    name: str = Field(..., description="代理的唯一名称")  # 代理名称
-    description: Optional[str] = Field(None, description="代理的可选描述")  # 代理描述
+    # Core attributes
+    name: str = Field(..., description="Unique name of the agent")
+    description: Optional[str] = Field(None, description="Optional agent description")
 
-    # 提示词配置
+    # Prompts
     system_prompt: Optional[str] = Field(
-        None, description="系统级指令提示词"  # 系统提示词
+        None, description="System-level instruction prompt"
     )
     next_step_prompt: Optional[str] = Field(
-        None, description="决定下一步行动的提示词"  # 下一步提示词
+        None, description="Prompt for determining next action"
     )
 
-    # 依赖组件
-    llm: LLM = Field(default_factory=LLM, description="语言模型实例")  # LLM实例
-    memory: Memory = Field(default_factory=Memory, description="代理的内存存储")  # 内存存储
+    # Dependencies
+    llm: LLM = Field(default_factory=LLM, description="Language model instance")
+    memory: Memory = Field(default_factory=Memory, description="Agent's memory store")
     state: AgentState = Field(
-        default=AgentState.IDLE, description="代理的当前状态"  # 当前状态
+        default=AgentState.IDLE, description="Current agent state"
     )
 
-    # 执行控制
-    max_steps: int = Field(default=10, description="终止前的最大步数")  # 最大步数
-    current_step: int = Field(default=0, description="执行中的当前步数")  # 当前步数
+    # Execution control
+    max_steps: int = Field(default=10, description="Maximum steps before termination")
+    current_step: int = Field(default=0, description="Current step in execution")
 
-    duplicate_threshold: int = 2  # 重复检测阈值
+    duplicate_threshold: int = 2
 
     class Config:
-        arbitrary_types_allowed = True  # 允许任意类型
-        extra = "allow"  # 允许子类添加额外字段
+        arbitrary_types_allowed = True
+        extra = "allow"  # Allow extra fields for flexibility in subclasses
 
     @model_validator(mode="after")
     def initialize_agent(self) -> "BaseAgent":
-        """
-        初始化代理：如果未提供则使用默认设置
-        
-        返回:
-            BaseAgent: 初始化后的代理实例
-        """
+        """Initialize agent with default settings if not provided."""
         if self.llm is None or not isinstance(self.llm, LLM):
             self.llm = LLM(config_name=self.name.lower())
         if not isinstance(self.memory, Memory):
@@ -68,80 +56,76 @@ class BaseAgent(BaseModel, ABC):
 
     @asynccontextmanager
     async def state_context(self, new_state: AgentState):
-        """
-        代理状态转换的上下文管理器
-        
-        参数:
-            new_state: 要转换到的新状态
-            
-        异常:
-            ValueError: 当new_state无效时
-            
-        Context manager for safe agent state transitions.
+        """Context manager for safe agent state transitions.
+
+        Args:
+            new_state: The state to transition to during the context.
+
+        Yields:
+            None: Allows execution within the new state.
+
+        Raises:
+            ValueError: If the new_state is invalid.
         """
         if not isinstance(new_state, AgentState):
-            raise ValueError(f"无效的状态：{new_state}")
+            raise ValueError(f"Invalid state: {new_state}")
 
         previous_state = self.state
         self.state = new_state
         try:
             yield
         except Exception as e:
-            self.state = AgentState.ERROR  # 发生错误时转换到ERROR状态
+            self.state = AgentState.ERROR  # Transition to ERROR on failure
             raise e
         finally:
-            self.state = previous_state  # 恢复到之前的状态
+            self.state = previous_state  # Revert to previous state
 
     def update_memory(
         self,
-        role: Literal["user", "system", "assistant", "tool"],
+        role: ROLE_TYPE,  # type: ignore
         content: str,
+        base64_image: Optional[str] = None,
         **kwargs,
     ) -> None:
-        """
-        向代理的内存添加消息
-        
-        参数:
-            role: 消息发送者的角色（用户、系统、助手、工具）
-            content: 消息内容
-            **kwargs: 附加参数（例如工具消息的tool_call_id）
-            
-        异常:
-            ValueError: 当角色不受支持时
-            
-        Add a message to the agent's memory.
+        """Add a message to the agent's memory.
+
+        Args:
+            role: The role of the message sender (user, system, assistant, tool).
+            content: The message content.
+            base64_image: Optional base64 encoded image.
+            **kwargs: Additional arguments (e.g., tool_call_id for tool messages).
+
+        Raises:
+            ValueError: If the role is unsupported.
         """
         message_map = {
-            "user": Message.user_message,  # 用户消息
-            "system": Message.system_message,  # 系统消息
-            "assistant": Message.assistant_message,  # 助手消息
-            "tool": lambda content, **kw: Message.tool_message(content, **kw),  # 工具消息
+            "user": Message.user_message,
+            "system": Message.system_message,
+            "assistant": Message.assistant_message,
+            "tool": lambda content, **kw: Message.tool_message(content, **kw),
         }
 
         if role not in message_map:
-            raise ValueError(f"不支持的消息角色：{role}")
+            raise ValueError(f"Unsupported message role: {role}")
 
-        msg_factory = message_map[role]
-        msg = msg_factory(content, **kwargs) if role == "tool" else msg_factory(content)
-        self.memory.add_message(msg)
+        # Create message with appropriate parameters based on role
+        kwargs = {"base64_image": base64_image, **(kwargs if role == "tool" else {})}
+        self.memory.add_message(message_map[role](content, **kwargs))
 
     async def run(self, request: Optional[str] = None) -> str:
-        """
-        异步执行代理的主循环
-        
-        参数:
-            request: 可选的初始用户请求
-            
-        返回:
-            str: 执行结果的摘要
-            
-        异常:
-            RuntimeError: 当代理不在IDLE状态时
-            
-        Execute the agent's main loop asynchronously.
+        """Execute the agent's main loop asynchronously.
+
+        Args:
+            request: Optional initial user request to process.
+
+        Returns:
+            A string summarizing the execution results.
+
+        Raises:
+            RuntimeError: If the agent is not in IDLE state at start.
         """
         if self.state != AgentState.IDLE:
-            raise RuntimeError(f"无法从状态{self.state}启动代理")
+            raise RuntimeError(f"Cannot run agent from state: {self.state}")
 
         if request:
             self.update_memory("user", request)
@@ -152,56 +136,38 @@ class BaseAgent(BaseModel, ABC):
                 self.current_step < self.max_steps and self.state != AgentState.FINISHED
             ):
                 self.current_step += 1
-                logger.info(f"执行步骤 {self.current_step}/{self.max_steps}")
+                logger.info(f"Executing step {self.current_step}/{self.max_steps}")
                 step_result = await self.step()
 
-                # 检查是否陷入循环
+                # Check for stuck state
                 if self.is_stuck():
                     self.handle_stuck_state()
 
-                results.append(f"步骤 {self.current_step}: {step_result}")
+                results.append(f"Step {self.current_step}: {step_result}")
 
             if self.current_step >= self.max_steps:
-                results.append(f"终止：达到最大步数（{self.max_steps}）")
+                self.current_step = 0
+                self.state = AgentState.IDLE
+                results.append(f"Terminated: Reached max steps ({self.max_steps})")
 
-        return "\n".join(results) if results else "未执行任何步骤"
+        return "\n".join(results) if results else "No steps executed"
 
     @abstractmethod
     async def step(self) -> str:
+        """Execute a single step in the agent's workflow.
+
+        Must be implemented by subclasses to define specific behavior.
         """
-        执行代理工作流中的单个步骤
-        
-        子类必须实现此方法以定义具体行为
-        
-        返回:
-            str: 步骤执行的结果
-            
-        Execute a single step in the agent's workflow.
-        """
-        pass
 
     def handle_stuck_state(self):
-        """
-        处理陷入循环的状态
-        通过添加提示词来改变策略
-        
-        Handle stuck state by adding a prompt to change strategy
-        """
+        """Handle stuck state by adding a prompt to change strategy"""
         stuck_prompt = "\
-        检测到重复响应。请考虑新的策略，避免重复已经尝试过的无效路径。"
+        Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted."
         self.next_step_prompt = f"{stuck_prompt}\n{self.next_step_prompt}"
-        logger.warning(f"代理检测到陷入循环。添加提示词：{stuck_prompt}")
+        logger.warning(f"Agent detected stuck state. Added prompt: {stuck_prompt}")
 
     def is_stuck(self) -> bool:
-        """
-        检查代理是否陷入循环
-        通过检测重复内容来判断
-        
-        返回:
-            bool: 是否陷入循环
-            
-        Check if the agent is stuck in a loop by detecting duplicate content
-        """
+        """Check if the agent is stuck in a loop by detecting duplicate content"""
         if len(self.memory.messages) < 2:
             return False
 
@@ -209,7 +175,7 @@ class BaseAgent(BaseModel, ABC):
         if not last_message.content:
             return False
 
-        # 计算相同内容出现的次数
+        # Count identical content occurrences
         duplicate_count = sum(
             1
             for msg in reversed(self.memory.messages[:-1])
@@ -220,24 +186,10 @@ class BaseAgent(BaseModel, ABC):
 
     @property
     def messages(self) -> List[Message]:
-        """
-        获取代理内存中的消息列表
-        
-        返回:
-            List[Message]: 消息列表
-            
-        Retrieve a list of messages from the agent's memory.
-        """
+        """Retrieve a list of messages from the agent's memory."""
         return self.memory.messages
 
     @messages.setter
     def messages(self, value: List[Message]):
-        """
-        设置代理内存中的消息列表
-        
-        参数:
-            value: 新的消息列表
-            
-        Set the list of messages in the agent's memory.
-        """
+        """Set the list of messages in the agent's memory."""
         self.memory.messages = value

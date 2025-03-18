@@ -1,9 +1,9 @@
 # Global LLM configuration
 [llm]
-model = "claude-3-7-sonnet-20250219"        # The LLM model to use
-base_url = "https://api.anthropic.com/v1/"  # API endpoint URL
-api_key = "YOUR_API_KEY"                    # Your API key
-max_tokens = 8192                           # Maximum number of tokens in the response
+model = "qwen-plus"        # The LLM model to use
+base_url = "https://bizapi.csdn.net/inscode/api/v1/open"  # API endpoint URL
+api_key = "Bearer 4a14c5bf887b4b33801e9b43d3e667db"                    # Your API key
+max_tokens = 4000                           # Maximum number of tokens in the response
 temperature = 0.0                           # Controls randomness
 
 # [llm] #AZURE OPENAI:
@@ -25,10 +25,10 @@ temperature = 0.0                           # Controls randomness
 
 # Optional configuration for specific LLM models
 [llm.vision]
-model = "claude-3-7-sonnet-20250219"        # The vision model to use
-base_url = "https://api.anthropic.com/v1/"  # API endpoint URL for vision model
-api_key = "YOUR_API_KEY"                    # Your API key for vision model
-max_tokens = 8192                           # Maximum number of tokens in the response
+model = "qwen-plus"        # The vision model to use
+base_url = "https://bizapi.csdn.net/inscode/api/v1/open"  # API endpoint URL for vision model
+api_key = "Bearer 4a14c5bf887b4b33801e9b43d3e667db"                    # Your API key for vision model
+max_tokens = 4000                           # Maximum number of tokens in the response
 temperature = 0.0                           # Controls randomness for vision model
 
 # [llm.vision] #OLLAMA VISION:
